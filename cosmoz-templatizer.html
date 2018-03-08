@@ -8,9 +8,14 @@
 			Polymer.Templatizer
 		],
 		templatize(template, owner, opts = {}) {
+			const ctor =  (function (self, model){
+				return self.stamp(model);
+			}).bind(null, this);
+
 			if (this.ctor) {
-				return this.ctor;
+				return ctor;
 			}
+
 			this.__owner = owner;
 			this._instanceProps = opts.instanceProps;
 
@@ -33,28 +38,11 @@
 			}
 
 			this.dataHost = owner;
-			this._patchConstructorImpl();
+
 			Polymer.Templatizer.templatize.call(this, template);
 			template.__templatizer = this;
 
-			return this.ctor;
-		},
-
-		_patchConstructorImpl() {
-			let _ctor  = this._constructorImpl,
-				self = this;
-
-			this._constructorImpl = function (model = {}, host = self) {
-				if (self._parentProps) {
-					var templatized = self._templatized;
-					for (let prop in self._parentProps) {
-						if (model[prop] === undefined) {
-							model[prop] = templatized[self._parentPropPrefix + prop];
-						}
-					}
-				}
-				return _ctor.call(this, model, host);
-			};
+			return ctor;
 		},
 
 		_getRootDataHost() {
